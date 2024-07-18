@@ -1,3 +1,16 @@
+# Jamming Web App
+* This project created by using JavaScript React library as a single Web App.
+* This App lets users search for songs by title, create playlists and save them directly to their Spotify account.
+* In addition to the requirements from the prompt, I have added new features to the overall style as well as a new functional feature.
+  
+**In terms of styling:**
+  Apart from proportional adjustments on the page, I've added a new function which changes the text color of the new given playlist name by users.
+  
+**In terms of a new functional feature:**
+   I have added a new function that displays a confirmation message on the screen for 5 seconds after users click the 'Save to Spotify' button, informing them that their new playlist has been created in their Spotify account under the new given name if they choose to do so.
+
+
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
