@@ -1,4 +1,4 @@
-# Jamming Web App
+# Jamming Single Page Web App
 * This project created by using JavaScript React library as a single page Web App.
 * This App lets users search for songs by title, create playlists and save them directly to their Spotify account.
 * In addition to the requirements from the prompt, I have added new features to the overall style as well as a new functional feature.
