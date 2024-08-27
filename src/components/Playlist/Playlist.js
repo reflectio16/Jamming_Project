@@ -9,7 +9,7 @@ const Playlist = (props) => {
     (event) => {
       props.onNameChange(event.target.value);
     },
-    [props, props.onNameChange]
+    [props.onNameChange]
   );
 
   const inputClass = props.playlistName === "New Playlist" ? "input-default" : "input-updated";

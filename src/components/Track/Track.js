@@ -6,14 +6,14 @@ const Track = (props) => {
     () => {
       props.onAdd(props.track);
     },
-    [props, props.onAdd, props.track]
+    [props.onAdd, props.track]
   );
 
   const removeTrack = useCallback(
     () => {
       props.onRemove(props.track);
     },
-    [props, props.onRemove, props.track]
+    [props.onRemove, props.track]
   );
 
   const renderAction = () => {
