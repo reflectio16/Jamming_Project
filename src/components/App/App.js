@@ -19,16 +19,12 @@ const App = () => {
     setIsLoading(true); // Start loading when search begins
     setErrorMessage(""); // Clear any previous errors
     Spotify.search(term)
-      .then((result) => {
-        setSearchResults(result);
-      })
+      .then((result) => setSearchResults(result))
       .catch((error) => {
         setErrorMessage("There was an error with your search. Please try again.");
         console.error("Search error: ", error);
       })
-      .finally(() => {
-        setIsLoading(false); // End loading when search is done
-      });
+      .finally(() => setIsLoading(false)); // End loading when search is done
   }, []);
 
   const addTrack = useCallback((track) => {

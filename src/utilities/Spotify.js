@@ -1,19 +1,20 @@
-const clientId = '0b36d00c0e424ea1950ca3e859e94c06'; // Insert client ID here.
+const clientId = '0b36d00c0e424ea1950ca3e859e94c06';
 const redirectUri = 'https://mervesjammingproject.surge.sh';
 let accessToken;
 let tokenExpiryTime;
 
 const Spotify = {
   getAccessToken() {
-    // Check if accessToken exists in localStorage
+    // Check if the access token is already stored and valid
     const storedAccessToken = localStorage.getItem('spotify_access_token');
     const storedTokenExpiry = localStorage.getItem('spotify_token_expiry');
 
     if (storedAccessToken && new Date().getTime() < storedTokenExpiry) {
       accessToken = storedAccessToken;
-      return accessToken;
+      return Promise.resolve(accessToken);
     }
 
+    // If we don't have a valid access token, check the URL for it
     const accessTokenMatch = window.location.href.match(/access_token=([^&]*)/);
     const expiresInMatch = window.location.href.match(/expires_in=([^&]*)/);
 
@@ -22,7 +23,7 @@ const Spotify = {
       const expiresIn = Number(expiresInMatch[1]);
       tokenExpiryTime = new Date().getTime() + expiresIn * 1000;
 
-      // Store the accessToken and expiry time in localStorage
+      // Store the access token and expiry time in localStorage
       localStorage.setItem('spotify_access_token', accessToken);
       localStorage.setItem('spotify_token_expiry', tokenExpiryTime);
 
@@ -32,27 +33,29 @@ const Spotify = {
         localStorage.removeItem('spotify_token_expiry');
       }, expiresIn * 1000);
 
+      // Clear the access token from the URL
       window.history.pushState('Access Token', null, '/');
-      return accessToken;
+
+      return Promise.resolve(accessToken);
     } else {
+      // Redirect to Spotify authorization page if we don't have a token
       const accessUrl = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=token&scope=playlist-modify-public&redirect_uri=${redirectUri}`;
       window.location = accessUrl;
-    }
-  },
 
-  createHeaders() {
-    const accessToken = this.getAccessToken();
-    return { Authorization: `Bearer ${accessToken}` };
+      return Promise.reject('No access token available.');
+    }
   },
 
   async search(term) {
-    // Ensure the access token is obtained first before making the search call
-    if (!accessToken) {
-      this.getAccessToken();
-      return; // Exit early if redirection occurs for authorization.
+    // Wait for the access token to be available
+    const token = await this.getAccessToken();
+    if (!token) {
+      console.error("No access token available.");
+      return [];
     }
 
-    const headers = this.createHeaders();
+    const headers = { Authorization: `Bearer ${token}` };
+
     try {
       const response = await fetch(`https://api.spotify.com/v1/search?type=track&q=${term}`, { headers });
       const jsonResponse = await response.json();
@@ -70,6 +73,7 @@ const Spotify = {
       }));
     } catch (error) {
       console.error('Error fetching search results:', error);
+      return [];
     }
   },
 
@@ -78,13 +82,13 @@ const Spotify = {
       return;
     }
 
-    const headers = this.createHeaders();
-    let userId;
+    const token = await this.getAccessToken();
+    const headers = { Authorization: `Bearer ${token}` };
 
     try {
       const userResponse = await fetch('https://api.spotify.com/v1/me', { headers });
       const userJson = await userResponse.json();
-      userId = userJson.id;
+      const userId = userJson.id;
 
       const playlistResponse = await fetch(`https://api.spotify.com/v1/users/${userId}/playlists`, {
         headers,
@@ -105,7 +109,9 @@ const Spotify = {
   },
 
   async getTrack(trackId) {
-    const headers = this.createHeaders();
+    const token = await this.getAccessToken();
+    const headers = { Authorization: `Bearer ${token}` };
+
     try {
       const response = await fetch(`https://api.spotify.com/v1/tracks/${trackId}`, { headers });
       if (!response.ok) {
