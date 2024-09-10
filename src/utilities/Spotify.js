@@ -5,16 +5,16 @@ let tokenExpiryTime;
 
 const Spotify = {
   getAccessToken() {
-    // Check if the access token is already stored and valid
     const storedAccessToken = localStorage.getItem('spotify_access_token');
     const storedTokenExpiry = localStorage.getItem('spotify_token_expiry');
 
+    // If there's a stored token and it's not expired, use it
     if (storedAccessToken && new Date().getTime() < storedTokenExpiry) {
       accessToken = storedAccessToken;
-      return Promise.resolve(accessToken);
+      return Promise.resolve(accessToken);  // Token is available
     }
 
-    // If we don't have a valid access token, check the URL for it
+    // If the token is in the URL after redirect from Spotify
     const accessTokenMatch = window.location.href.match(/access_token=([^&]*)/);
     const expiresInMatch = window.location.href.match(/expires_in=([^&]*)/);
 
@@ -23,40 +23,29 @@ const Spotify = {
       const expiresIn = Number(expiresInMatch[1]);
       tokenExpiryTime = new Date().getTime() + expiresIn * 1000;
 
-      // Store the access token and expiry time in localStorage
+      // Store the token and its expiration time in localStorage
       localStorage.setItem('spotify_access_token', accessToken);
       localStorage.setItem('spotify_token_expiry', tokenExpiryTime);
 
-      window.setTimeout(() => {
-        accessToken = '';
-        localStorage.removeItem('spotify_access_token');
-        localStorage.removeItem('spotify_token_expiry');
-      }, expiresIn * 1000);
-
-      // Clear the access token from the URL
+      // Clear the token from the URL
       window.history.pushState('Access Token', null, '/');
 
-      return Promise.resolve(accessToken);
+      return Promise.resolve(accessToken);  // Return the new token
     } else {
-      // Redirect to Spotify authorization page if we don't have a token
+      // Redirect to Spotify to get a new token
       const accessUrl = `https://accounts.spotify.com/authorize?client_id=${clientId}&response_type=token&scope=playlist-modify-public&redirect_uri=${redirectUri}`;
       window.location = accessUrl;
-
-      return Promise.reject('No access token available.');
+      
+      return Promise.reject('Redirecting to Spotify for token');  // Token not available yet, redirect happening
     }
   },
 
   async search(term) {
-    // Wait for the access token to be available
-    const token = await this.getAccessToken();
-    if (!token) {
-      console.error("No access token available.");
-      return [];
-    }
-
-    const headers = { Authorization: `Bearer ${token}` };
-
     try {
+      // Wait for the access token to be available
+      const token = await this.getAccessToken();
+      const headers = { Authorization: `Bearer ${token}` };
+
       const response = await fetch(`https://api.spotify.com/v1/search?type=track&q=${term}`, { headers });
       const jsonResponse = await response.json();
 
