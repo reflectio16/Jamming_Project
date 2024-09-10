@@ -12,9 +12,23 @@ const App = () => {
   const [playlistTracks, setPlaylistTracks] = useState([]); // Maintains a list of tracks in the current playlist.
   const [isPlaylistSaved, setIsPlaylistSaved] = useState(false); // Manages state of playlist as boolean value (saved or not).
   const [savedPlaylistName, setSavedPlaylistName] = useState(""); // Manages state for displaying a confirmation message when a playlist is successfully saved to Spotify.
+  const [isLoading, setIsLoading] = useState(false); // Loading state for search
+  const [errorMessage, setErrorMessage] = useState(""); // Error state for search failures
 
   const search = useCallback((term) => {
-    Spotify.search(term).then((result) => setSearchResults(result));
+    setIsLoading(true); // Start loading when search begins
+    setErrorMessage(""); // Clear any previous errors
+    Spotify.search(term)
+      .then((result) => {
+        setSearchResults(result);
+      })
+      .catch((error) => {
+        setErrorMessage("There was an error with your search. Please try again.");
+        console.error("Search error: ", error);
+      })
+      .finally(() => {
+        setIsLoading(false); // End loading when search is done
+      });
   }, []);
 
   const addTrack = useCallback((track) => {
@@ -53,14 +67,19 @@ const App = () => {
       <div className="App">
         <SearchBar onSearch={search} />
         <div className="App-playlist">
-          <SearchResults searchResults={searchResults} onAdd={addTrack} />
+          {isLoading && <p>Loading search results...</p>} {/* Loading message */}
+          {errorMessage && <p className="error-message">{errorMessage}</p>} {/* Error message */}
+          
+          {!isLoading && !errorMessage && (
+            <SearchResults searchResults={searchResults} onAdd={addTrack} />
+          )}
+          
           <Playlist
             playlistName={playlistName}
             playlistTracks={playlistTracks}
             onNameChange={updatePlaylistName}
             onRemove={removeTrack}
             onSave={savePlaylist}
-            
           />
 
           {isPlaylistSaved && (

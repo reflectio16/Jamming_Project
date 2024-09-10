@@ -5,7 +5,12 @@ let tokenExpiryTime;
 
 const Spotify = {
   getAccessToken() {
-    if (accessToken) {
+    // Check if accessToken exists in localStorage
+    const storedAccessToken = localStorage.getItem('spotify_access_token');
+    const storedTokenExpiry = localStorage.getItem('spotify_token_expiry');
+
+    if (storedAccessToken && new Date().getTime() < storedTokenExpiry) {
+      accessToken = storedAccessToken;
       return accessToken;
     }
 
@@ -16,7 +21,17 @@ const Spotify = {
       accessToken = accessTokenMatch[1];
       const expiresIn = Number(expiresInMatch[1]);
       tokenExpiryTime = new Date().getTime() + expiresIn * 1000;
-      window.setTimeout(() => accessToken = '', expiresIn * 1000);
+
+      // Store the accessToken and expiry time in localStorage
+      localStorage.setItem('spotify_access_token', accessToken);
+      localStorage.setItem('spotify_token_expiry', tokenExpiryTime);
+
+      window.setTimeout(() => {
+        accessToken = '';
+        localStorage.removeItem('spotify_access_token');
+        localStorage.removeItem('spotify_token_expiry');
+      }, expiresIn * 1000);
+
       window.history.pushState('Access Token', null, '/');
       return accessToken;
     } else {
@@ -32,7 +47,7 @@ const Spotify = {
 
   async search(term) {
     // Ensure the access token is obtained first before making the search call
-    if (!accessToken || new Date().getTime() >= tokenExpiryTime) {
+    if (!accessToken) {
       this.getAccessToken();
       return; // Exit early if redirection occurs for authorization.
     }
