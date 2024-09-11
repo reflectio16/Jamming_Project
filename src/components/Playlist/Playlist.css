@@ -20,6 +20,13 @@
     font-size: 1.55rem;
   }
   
+  input:hover,
+  input:active,
+  input:focus {
+    outline: none;
+    border: 1px solid #cfcbcb;
+  }
+  
   .input-default {
     color: #cfcbcb;
   }
